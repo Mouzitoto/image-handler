@@ -52,7 +52,7 @@ public class ImageService {
         LOGGER.info("Finish validating args;");
     }
 
-    public void handleImage(String[] args) throws IHIOException {
+    public String handleImage(String[] args) throws IHIOException, IHBadInputException {
         try {
             BufferedImage image = loadImage(args[0]);
 
@@ -60,7 +60,7 @@ public class ImageService {
 
             image = applyGrayScaleEffect(image);
 
-            saveImageToFileSystem(image);
+            return saveImageToFileSystem(image);
 
         } catch (IOException e) {
             throw new IHIOException(e.getMessage());
@@ -68,7 +68,7 @@ public class ImageService {
 
     }
 
-    private BufferedImage loadImage(String path) throws IHIOException {
+    private BufferedImage loadImage(String path) throws IHIOException, IHBadInputException {
         try {
             LOGGER.info("Start loading image;");
 
@@ -78,6 +78,9 @@ public class ImageService {
             else
                 image = ImageIO.read(new File(path));
 
+            if (image == null)
+                throw new IHBadInputException("Bad image path/url");
+
             LOGGER.info("Finish loading image;");
 
             return image;
@@ -86,7 +89,7 @@ public class ImageService {
         }
     }
 
-    private void saveImageToFileSystem(BufferedImage image) throws IOException {
+    private String saveImageToFileSystem(BufferedImage image) throws IOException {
         LOGGER.info("Start saving image to file system;");
 
         String fileName = System.currentTimeMillis() + ".jpg";
@@ -95,6 +98,8 @@ public class ImageService {
         ImageIO.write(image, "jpg", file);
 
         LOGGER.info("Finish saving image to file system; Image path: " + file.getAbsoluteFile().toString());
+
+        return file.getAbsoluteFile().toString();
     }
 
     private BufferedImage resizeImage(BufferedImage image, int newWidth, int newHeight) {
